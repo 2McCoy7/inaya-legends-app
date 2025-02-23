@@ -6,17 +6,18 @@ on:
       - main
   workflow_dispatch:
   schedule:
-    - cron: '*/15 * * * *'  # Runs every hour
+    - cron: '*/15 * * * *'  # Runs every 15 minutes
 
 jobs:
   build_generate_deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.DEPLOY_TOKEN }}
-          fetch-depth: 0
+          fetch-depth: 0  # Ensures full history for accurate pulls and merges
 
       - name: Setup Git Config
         run: |
@@ -25,7 +26,8 @@ jobs:
 
       - name: Pull Latest Code to Avoid Conflicts
         run: |
-          git pull origin main --rebase || true
+          git fetch origin
+          git reset --hard origin/main
 
       - name: Generate Project Files Automatically
         run: |
@@ -38,7 +40,7 @@ jobs:
           DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
         run: |
           git add project_files
-          git commit -m "🤖 Auto-generated & uploaded project files" || echo "No changes to commit."
+          git commit -m "🤖 Auto-generated & uploaded project files" || echo "⚠️ No changes to commit."
           git pull origin main --rebase || true
           git push https://x-access-token:${{ secrets.DEPLOY_TOKEN }}@github.com/${{ github.repository }}.git main
 
