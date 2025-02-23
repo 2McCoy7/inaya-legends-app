@@ -16,8 +16,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.DEPLOY_TOKEN }}
-          fetch-depth: 0  # Ensures full history for accurate pulls and merges
+          fetch-depth: 0
 
       - name: Setup Git Config
         run: |
@@ -26,23 +25,30 @@ jobs:
 
       - name: Pull Latest Code to Avoid Conflicts
         run: |
-          git fetch origin
-          git reset --hard origin/main
+          git pull origin main --rebase || true
 
-      - name: Generate Project Files Automatically
+      - name: Generate Project Files and Folder Structure
         run: |
-          mkdir -p project_files
-          echo "Generated file at $(date)" > project_files/GENERATED_FILE.txt
-          echo "Project auto-build successful." > project_files/BUILD_LOG.txt
+          mkdir -p project_files/assets
+          mkdir -p project_files/src/components
+          mkdir -p project_files/src/utils
+          mkdir -p project_files/docs
+
+          # Add placeholder files to ensure folders are tracked
+          touch project_files/.gitkeep
+          touch project_files/assets/.gitkeep
+          touch project_files/src/components/.gitkeep
+          touch project_files/src/utils/.gitkeep
+          touch project_files/docs/.gitkeep
+
+          echo "Generated at $(date)" > project_files/BUILD_LOG.txt
 
       - name: Commit and Push Generated Files
-        env:
-          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
         run: |
           git add project_files
-          git commit -m "🤖 Auto-generated & uploaded project files" || echo "⚠️ No changes to commit."
+          git commit -m "🤖 Auto-generated & uploaded project files with folder structure" || echo "No changes to commit."
           git pull origin main --rebase || true
-          git push https://x-access-token:${{ secrets.DEPLOY_TOKEN }}@github.com/${{ github.repository }}.git main
+          git push origin main
 
       - name: Confirm Deployment
-        run: echo "✅ Files generated, committed, and pushed to GitHub!"
+        run: echo "✅ Folder structure and files have been pushed to GitHub!"
